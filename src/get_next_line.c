@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: ugerkens <ugerkens@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/10/15 18:53:27 by ugerkens          #+#    #+#             */
-/*   Updated: 2023/10/15 18:53:30 by ugerkens         ###   ########.fr       */
+/*   Created: 2023/11/07 12:58:37 by ugerkens          #+#    #+#             */
+/*   Updated: 2023/11/07 12:58:39 by ugerkens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ char	*init_line(char *stash, int *eol_loc)
 	line = malloc(sizeof(char) * (len + 1));
 	if (!line)
 		return (NULL);
-	ft_memcpy(line, stash, len);
+	ft_memcpy_gnl(line, stash, len);
 	line[len] = '\0';
 	if (len > 0 && line[len - 1] == '\n')
 		*eol_loc = len - 1;
@@ -55,12 +55,12 @@ char	*extract_line(char *line, char *stash, int *eol_loc, int fd)
 
 	while (*eol_loc == -1)
 	{
-		ft_bzero(buffer, (BUFFER_SIZE + 1));
+		ft_bzero_gnl(buffer, (BUFFER_SIZE + 1));
 		read_check = read(fd, buffer, BUFFER_SIZE);
 		if (read_check == -1)
 		{
 			free(line);
-			ft_bzero(stash, (BUFFER_SIZE + 1));
+			ft_bzero_gnl(stash, (BUFFER_SIZE + 1));
 			return (NULL);
 		}
 		line_size = locate_eol(buffer);
@@ -69,31 +69,32 @@ char	*extract_line(char *line, char *stash, int *eol_loc, int fd)
 		line = ft_strjoin_gnl(line, buffer, eol_loc);
 		if (read_check == 0)
 		{
-			ft_bzero(stash, BUFFER_SIZE + 1);
+			ft_bzero_gnl(stash, BUFFER_SIZE + 1);
 			break ;
 		}
 	}
 	return (line);
 }
 
-char	*get_next_line(int fd)
+int	get_next_line(int fd, char **return_line)
 {
-	static char	stash[BUFFER_SIZE + 1];
+	static char	stash[FOPEN_MAX][BUFFER_SIZE + 1];
 	char		*line;
 	int			eol_loc;
 
-	if (fd < 0 || BUFFER_SIZE <= 0)
-		return (NULL);
+	if (fd < 0 || fd >= FOPEN_MAX || BUFFER_SIZE <= 0)
+		return (EXIT_FAILURE);
 	eol_loc = -1;
-	line = init_line(stash, &eol_loc);
+	line = init_line(stash[fd], &eol_loc);
 	if (!line)
-		return (NULL);
-	ft_strlcpy_gnl(stash, &stash[eol_loc + 1], BUFFER_SIZE + 1);
-	line = extract_line(line, stash, &eol_loc, fd);
-	if (!line || line[0] == '\0')
+		return (EXIT_FAILURE);
+	ft_strlcpy_gnl(stash[fd], &stash[fd][eol_loc + 1], BUFFER_SIZE + 1);
+	line = extract_line(line, stash[fd], &eol_loc, fd);
+	if (!line)
 	{
 		free(line);
-		return (NULL);
+		return (EXIT_FAILURE);
 	}
-	return (line);
+	*return_line = line;
+	return (EXIT_SUCCESS);
 }
