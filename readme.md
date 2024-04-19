@@ -1,6 +1,9 @@
 <h1 align="center">
-	Get Next Line
+	A Strict Get Next Line
 </h1>
+<p align="center">
+	This project helped you? Give it a 🌟!
+</p>
 
 ## 📃 General information
 Version: 10. Bonus included.</br>
